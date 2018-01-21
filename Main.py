@@ -95,6 +95,28 @@ class neuralNetwork():
         print "Trained for " + str(traingingTime) + " loops."
         print "Ending error: " + str(np.mean(np.abs(self.Error[len(self.Error) - 1])) * 100) + "%"
         
+    def trainTillInterupt(self,trainingData, printTime = 10000):
+        print "starting training"
+        try:
+            count = 0
+            while True:
+                # Run net on data
+                self.runData(trainingData[0])
+
+                # Check data output from -runData- and get the error
+                self.calcError(trainingData[1])
+                    
+                # if it is time to print, print the error from the last run though
+                if(count % printTime == 0):
+                    print str(count) + " training loops. Error: " + str(np.mean(np.abs(self.Error[len(self.Error) - 1])) * 100) + "%"
+                    
+                # Change the Synapse based on the error
+                self.correctError()
+                count += 1
+                    
+        except KeyboardInterrupt:
+            self.printNetData()
+
     def runData(self, data):
         # Set the first node layer value to the data
         self.Nodes[0] = data
@@ -120,38 +142,50 @@ class neuralNetwork():
         for index in xrange(len(self.Synapse)):
             self.Synapse[index] += self.Nodes[index].T.dot(self.Delta[index])
     
-    def getNetData(self):
+    def printNetData(self):
+        np.set_printoptions(threshold=np.nan)
         # Run through each layer of Synapse and print it out
         for index in xrange(len(self.Synapse)):
             print "Layer - " + str(index)
             print self.Synapse[index]
-
 
 #-------------------------------------------------------------------------------------------------------------
 
 # Not important stuff
 # FOR DEMO ONLY
 
+from ImageLoader import getSpriteSheet
+
 # this is some sample data to use for testing the net
-data = np.array([
-            [0,0,1],
-            [0,1,1],
-            [1,0,1],
-            [1,1,1]])
+#data = np.array([getSpriteSheet('HandWritingNumbers.png',30,30,True)])
+
+data = np.array([[0,0,1],[0,1,1],[1,0,1],[1,1,1]])
+
 dataSize = len(data[0])
 
-answers = np.array([
-            [0],
-			[1],
-			[1],
-			[0]])
+# answers = np.array([
+#     [0,1,0,0,0,0,0,0,0,0],
+#     [0,0,1,0,0,0,0,0,0,0],
+#     [0,0,0,1,0,0,0,0,0,0],
+#     [0,0,0,0,1,0,0,0,0,0],
+#     [0,0,0,0,0,1,0,0,0,0],
+#     [0,0,0,0,0,0,1,0,0,0],
+#     [0,0,0,0,0,0,0,1,0,0],
+#     [0,0,0,0,0,0,0,0,1,0],
+#     [0,0,0,0,0,0,0,0,0,1],
+#     [1,0,0,0,0,0,0,0,0,0]
+#     ] * 20)
+
+answers = np.array([[0],[1],[1],[0]])
+            
 answerSize = len(answers[0])
 
 # creating the net with designated layer sizes (First and last layer must match the data and answers)
-net = neuralNetwork([dataSize,5,answerSize])
+net = neuralNetwork([dataSize,5,25,5,answerSize])
 
 # training the network with the data 100000 times and updating us 10 times through the presses
-net.train([data,answers],100000,10)
+#net.train([data,answers],100000,10)
+net.trainTillInterupt([data,answers])
 
 #print out the values of the layer connections
-net.getNetData()
+net.printNetData()
